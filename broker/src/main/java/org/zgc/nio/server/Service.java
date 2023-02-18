@@ -3,7 +3,7 @@ package org.zgc.nio.server;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
 import com.google.protobuf.Timestamp;
-import org.zgc.nio.protocol.MethodInvokeRequest;
+import org.zgc.nio.protocol.Record;
 import org.zgc.nio.protocol.MethodInvokeResponse;
 
 import java.lang.invoke.MethodHandle;
@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
  */
 public class Service {
 
-    public static MethodInvokeResponse handlerRequest(MethodInvokeRequest request) {
+    public static MethodInvokeResponse handlerRequest(Record request) {
         ProtocolStringList argsList = request.getArgsList();
         String result = null;
         try {

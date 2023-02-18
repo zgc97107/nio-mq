@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.zgc.nio.server.Service;
 import org.zgc.nio.parser.RequestParser;
-import org.zgc.nio.protocol.MethodInvokeRequest;
+import org.zgc.nio.protocol.Record;
 import org.zgc.nio.protocol.MethodInvokeResponse;
 
 import java.io.IOException;
@@ -77,7 +77,7 @@ public class Processor extends Thread {
                     // 解决半包、沾包问题
                     RequestParser parser = unFinishParsers.containsKey(client) ? unFinishParsers.remove(client) :
                             new RequestParser();
-                    MethodInvokeRequest request = parser.parse(channel);
+                    Record request = parser.parse(channel);
                     if (!parser.isFinish()) {
                         unFinishParsers.put(client, parser);
                         return;

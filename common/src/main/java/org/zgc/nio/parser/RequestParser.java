@@ -1,18 +1,18 @@
 package org.zgc.nio.parser;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.zgc.nio.protocol.MethodInvokeRequest;
+import org.zgc.nio.protocol.Record;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
-public class RequestParser extends Parser<MethodInvokeRequest> {
+public class RequestParser extends Parser<Record> {
     @Override
-    public MethodInvokeRequest parse(SocketChannel channel) throws IOException {
+    public Record parse(SocketChannel channel) throws IOException {
         return doParse(channel, bytes -> {
             try {
                 if (bytes != null) {
-                    return MethodInvokeRequest.parseFrom(bytes);
+                    return Record.parseFrom(bytes);
                 }
             } catch (InvalidProtocolBufferException e) {
                 e.printStackTrace();

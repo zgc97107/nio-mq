@@ -2,7 +2,7 @@ package org.zgc.nio.producer.thread;
 
 import lombok.Data;
 import org.zgc.nio.parser.ResponseParser;
-import org.zgc.nio.protocol.MethodInvokeRequest;
+import org.zgc.nio.protocol.Record;
 import org.zgc.nio.protocol.MethodInvokeResponse;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ public class Processor extends Thread {
     private int port;
     boolean isStart = true;
     private SelectionKey key = null;
-    private BlockingQueue<MethodInvokeRequest> waitingSendRequests = new LinkedBlockingQueue<>();
+    private BlockingQueue<Record> waitingSendRequests = new LinkedBlockingQueue<>();
     private Map<Integer, MethodInvokeResponse> cachedResponse = new HashMap<>();
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition condition = lock.newCondition();
@@ -98,7 +98,7 @@ public class Processor extends Thread {
     private void sendRequest(SelectionKey key) {
         try {
             SocketChannel channel = (SocketChannel) key.channel();
-            MethodInvokeRequest request;
+            Record request;
             while ((request = this.waitingSendRequests.poll()) != null) {
                 byte[] data = request.toByteArray();
                 ByteBuffer buffer = ByteBuffer.allocate(data.length + 4);
@@ -138,7 +138,7 @@ public class Processor extends Thread {
         }
     }
 
-    public void send(MethodInvokeRequest request) {
+    public void send(Record request) {
         boolean offer = waitingSendRequests.offer(request);
         if (!offer) {
             System.out.println("send request failed");

@@ -6,16 +6,16 @@ package org.zgc.nio.protocol;
 /**
  * Protobuf type {@code org.nio.test.MethodInvokeRequest}
  */
-public final class MethodInvokeRequest extends
+public final class Record extends
     com.google.protobuf.GeneratedMessageV3 implements
     // @@protoc_insertion_point(message_implements:org.nio.test.MethodInvokeRequest)
     MethodInvokeRequestOrBuilder {
 private static final long serialVersionUID = 0L;
   // Use MethodInvokeRequest.newBuilder() to construct.
-  private MethodInvokeRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  private Record(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private MethodInvokeRequest() {
+  private Record() {
     clazz_ = "";
     method_ = "";
     args_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -25,7 +25,7 @@ private static final long serialVersionUID = 0L;
   @SuppressWarnings({"unused"})
   protected java.lang.Object newInstance(
       UnusedPrivateParameter unused) {
-    return new MethodInvokeRequest();
+    return new Record();
   }
 
   @java.lang.Override
@@ -33,7 +33,7 @@ private static final long serialVersionUID = 0L;
   getUnknownFields() {
     return this.unknownFields;
   }
-  private MethodInvokeRequest(
+  private Record(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -125,7 +125,7 @@ private static final long serialVersionUID = 0L;
       internalGetFieldAccessorTable() {
     return org.zgc.nio.protocol.Request.internal_static_org_nio_test_MethodInvokeRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            org.zgc.nio.protocol.MethodInvokeRequest.class, org.zgc.nio.protocol.MethodInvokeRequest.Builder.class);
+            Record.class, Record.Builder.class);
   }
 
   public static final int REQUESTID_FIELD_NUMBER = 1;
@@ -151,7 +151,7 @@ private static final long serialVersionUID = 0L;
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
-      com.google.protobuf.ByteString bs = 
+      com.google.protobuf.ByteString bs =
           (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
       clazz_ = s;
@@ -167,7 +167,7 @@ private static final long serialVersionUID = 0L;
       getClazzBytes() {
     java.lang.Object ref = clazz_;
     if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
+      com.google.protobuf.ByteString b =
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
       clazz_ = b;
@@ -189,7 +189,7 @@ private static final long serialVersionUID = 0L;
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
-      com.google.protobuf.ByteString bs = 
+      com.google.protobuf.ByteString bs =
           (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
       method_ = s;
@@ -205,7 +205,7 @@ private static final long serialVersionUID = 0L;
       getMethodBytes() {
     java.lang.Object ref = method_;
     if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
+      com.google.protobuf.ByteString b =
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
       method_ = b;
@@ -346,10 +346,10 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof org.zgc.nio.protocol.MethodInvokeRequest)) {
+    if (!(obj instanceof Record)) {
       return super.equals(obj);
     }
-    org.zgc.nio.protocol.MethodInvokeRequest other = (org.zgc.nio.protocol.MethodInvokeRequest) obj;
+    Record other = (Record) obj;
 
     if (getRequestId()
         != other.getRequestId()) return false;
@@ -394,69 +394,69 @@ private static final long serialVersionUID = 0L;
     return hash;
   }
 
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(
+  public static Record parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(
+  public static Record parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(
+  public static Record parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(
+  public static Record parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(byte[] data)
+  public static Record parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(
+  public static Record parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(java.io.InputStream input)
+  public static Record parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(
+  public static Record parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseDelimitedFrom(java.io.InputStream input)
+  public static Record parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseDelimitedFrom(
+  public static Record parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(
+  public static Record parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static org.zgc.nio.protocol.MethodInvokeRequest parseFrom(
+  public static Record parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -469,7 +469,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(org.zgc.nio.protocol.MethodInvokeRequest prototype) {
+  public static Builder newBuilder(Record prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -501,7 +501,7 @@ private static final long serialVersionUID = 0L;
         internalGetFieldAccessorTable() {
       return org.zgc.nio.protocol.Request.internal_static_org_nio_test_MethodInvokeRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.zgc.nio.protocol.MethodInvokeRequest.class, org.zgc.nio.protocol.MethodInvokeRequest.Builder.class);
+              Record.class, Record.Builder.class);
     }
 
     // Construct using org.zgc.nio.protocol.MethodInvokeRequest.newBuilder()
@@ -546,13 +546,13 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public org.zgc.nio.protocol.MethodInvokeRequest getDefaultInstanceForType() {
-      return org.zgc.nio.protocol.MethodInvokeRequest.getDefaultInstance();
+    public Record getDefaultInstanceForType() {
+      return Record.getDefaultInstance();
     }
 
     @java.lang.Override
-    public org.zgc.nio.protocol.MethodInvokeRequest build() {
-      org.zgc.nio.protocol.MethodInvokeRequest result = buildPartial();
+    public Record build() {
+      Record result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -560,8 +560,8 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public org.zgc.nio.protocol.MethodInvokeRequest buildPartial() {
-      org.zgc.nio.protocol.MethodInvokeRequest result = new org.zgc.nio.protocol.MethodInvokeRequest(this);
+    public Record buildPartial() {
+      Record result = new Record(this);
       int from_bitField0_ = bitField0_;
       result.requestId_ = requestId_;
       result.clazz_ = clazz_;
@@ -614,16 +614,16 @@ private static final long serialVersionUID = 0L;
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof org.zgc.nio.protocol.MethodInvokeRequest) {
-        return mergeFrom((org.zgc.nio.protocol.MethodInvokeRequest)other);
+      if (other instanceof Record) {
+        return mergeFrom((Record)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(org.zgc.nio.protocol.MethodInvokeRequest other) {
-      if (other == org.zgc.nio.protocol.MethodInvokeRequest.getDefaultInstance()) return this;
+    public Builder mergeFrom(Record other) {
+      if (other == Record.getDefaultInstance()) return this;
       if (other.getRequestId() != 0) {
         setRequestId(other.getRequestId());
       }
@@ -663,11 +663,11 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      org.zgc.nio.protocol.MethodInvokeRequest parsedMessage = null;
+      Record parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (org.zgc.nio.protocol.MethodInvokeRequest) e.getUnfinishedMessage();
+        parsedMessage = (Record) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -693,7 +693,7 @@ private static final long serialVersionUID = 0L;
      * @return This builder for chaining.
      */
     public Builder setRequestId(int value) {
-      
+
       requestId_ = value;
       onChanged();
       return this;
@@ -703,7 +703,7 @@ private static final long serialVersionUID = 0L;
      * @return This builder for chaining.
      */
     public Builder clearRequestId() {
-      
+
       requestId_ = 0;
       onChanged();
       return this;
@@ -734,7 +734,7 @@ private static final long serialVersionUID = 0L;
         getClazzBytes() {
       java.lang.Object ref = clazz_;
       if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         clazz_ = b;
@@ -753,7 +753,7 @@ private static final long serialVersionUID = 0L;
       if (value == null) {
     throw new NullPointerException();
   }
-  
+
       clazz_ = value;
       onChanged();
       return this;
@@ -763,7 +763,7 @@ private static final long serialVersionUID = 0L;
      * @return This builder for chaining.
      */
     public Builder clearClazz() {
-      
+
       clazz_ = getDefaultInstance().getClazz();
       onChanged();
       return this;
@@ -779,7 +779,7 @@ private static final long serialVersionUID = 0L;
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-      
+
       clazz_ = value;
       onChanged();
       return this;
@@ -810,7 +810,7 @@ private static final long serialVersionUID = 0L;
         getMethodBytes() {
       java.lang.Object ref = method_;
       if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
+        com.google.protobuf.ByteString b =
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         method_ = b;
@@ -829,7 +829,7 @@ private static final long serialVersionUID = 0L;
       if (value == null) {
     throw new NullPointerException();
   }
-  
+
       method_ = value;
       onChanged();
       return this;
@@ -839,7 +839,7 @@ private static final long serialVersionUID = 0L;
      * @return This builder for chaining.
      */
     public Builder clearMethod() {
-      
+
       method_ = getDefaultInstance().getMethod();
       onChanged();
       return this;
@@ -855,7 +855,7 @@ private static final long serialVersionUID = 0L;
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-      
+
       method_ = value;
       onChanged();
       return this;
@@ -1058,7 +1058,7 @@ private static final long serialVersionUID = 0L;
      * <code>.google.protobuf.Timestamp time = 5;</code>
      */
     public com.google.protobuf.Timestamp.Builder getTimeBuilder() {
-      
+
       onChanged();
       return getTimeFieldBuilder().getBuilder();
     }
@@ -1077,7 +1077,7 @@ private static final long serialVersionUID = 0L;
      * <code>.google.protobuf.Timestamp time = 5;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> 
+        com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
         getTimeFieldBuilder() {
       if (timeBuilder_ == null) {
         timeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1106,37 +1106,37 @@ private static final long serialVersionUID = 0L;
   }
 
   // @@protoc_insertion_point(class_scope:org.nio.test.MethodInvokeRequest)
-  private static final org.zgc.nio.protocol.MethodInvokeRequest DEFAULT_INSTANCE;
+  private static final Record DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new org.zgc.nio.protocol.MethodInvokeRequest();
+    DEFAULT_INSTANCE = new Record();
   }
 
-  public static org.zgc.nio.protocol.MethodInvokeRequest getDefaultInstance() {
+  public static Record getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<MethodInvokeRequest>
-      PARSER = new com.google.protobuf.AbstractParser<MethodInvokeRequest>() {
+  private static final com.google.protobuf.Parser<Record>
+      PARSER = new com.google.protobuf.AbstractParser<Record>() {
     @java.lang.Override
-    public MethodInvokeRequest parsePartialFrom(
+    public Record parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return new MethodInvokeRequest(input, extensionRegistry);
+      return new Record(input, extensionRegistry);
     }
   };
 
-  public static com.google.protobuf.Parser<MethodInvokeRequest> parser() {
+  public static com.google.protobuf.Parser<Record> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<MethodInvokeRequest> getParserForType() {
+  public com.google.protobuf.Parser<Record> getParserForType() {
     return PARSER;
   }
 
   @java.lang.Override
-  public org.zgc.nio.protocol.MethodInvokeRequest getDefaultInstanceForType() {
+  public Record getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 
