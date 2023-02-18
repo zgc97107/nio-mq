@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package org.nio.test;
+
+option java_multiple_files = true;
+option java_package = "org.zgc.nio.protocol";
+
+import "google/protobuf/timestamp.proto";
+
+message MethodInvokeResponse{
+  int32 requestId = 1;
+  string clazz = 2;
+  string method = 3;
+  repeated string args = 4;
+  bytes result = 5;
+  google.protobuf.Timestamp time = 6;
+}
