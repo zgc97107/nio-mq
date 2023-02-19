@@ -2,7 +2,7 @@ package org.zgc.nio.producer;
 
 import org.jline.reader.UserInterruptException;
 import org.zgc.nio.producer.command.Command;
-import org.zgc.nio.producer.thread.Processor;
+import org.zgc.nio.producer.thread.Sender;
 import org.zgc.nio.producer.tools.CommandReader;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.io.IOException;
 public class Bootstrap {
     public static boolean isStart = true;
     public static void main(String[] args) throws InterruptedException, IOException {
-        Processor processor = new Processor("localhost", 8848);
+        Sender processor = new Sender("localhost", 8848);
         processor.start();
         CommandReader reader = new CommandReader();
         try {

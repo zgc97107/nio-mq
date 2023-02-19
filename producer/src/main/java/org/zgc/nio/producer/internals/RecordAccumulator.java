@@ -66,4 +66,19 @@ public class RecordAccumulator {
         return false;
     }
 
+    public RecordBatch ready() {
+        long now = System.currentTimeMillis();
+        RecordBatch recordBatch = batches.peekFirst();
+        if (recordBatch == null || recordBatch.getRecords() <= 0) {
+            return null;
+        }
+        if (now - recordBatch.getLastWriteTime() > ProducerConfig.RECORD_BATCH_SEND_MAX_WAIT_TIME) {
+            return recordBatch;
+        }
+        if (recordBatch.freeSize() < ProducerConfig.RECORD_BATCH_SEND_FREE_SIZE) {
+            return recordBatch;
+        }
+        return null;
+    }
+
 }

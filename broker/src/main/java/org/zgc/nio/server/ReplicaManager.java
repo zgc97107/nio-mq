@@ -9,24 +9,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Log
 public class ReplicaManager {
-    private AtomicInteger offsetsIndex;
     private LogSegment logSegment;
 
-    public ReplicaManager() {
-        this.offsetsIndex = new AtomicInteger(0);
-        String path = nextLogDir();
-        File file = new File(path);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        this.logSegment = new LogSegment(path, BrokerConfig.INDEX_INTERVAL_BYTES);
+    public ReplicaManager(LogSegment logSegment) {
+        this.logSegment = logSegment;
     }
 
-    public void appendMessages(long offset, ByteBuffer buffer) {
-        this.logSegment.append(offset, buffer);
-    }
-
-    public String nextLogDir() {
-        return BrokerConfig.LOG_DIR + "_consumer_offsets-" + offsetsIndex.getAndIncrement();
+    public void appendMessages(ByteBuffer buffer) {
+        // TODO group by topic partition
+        this.logSegment.append(buffer);
     }
 }

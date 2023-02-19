@@ -1,7 +1,7 @@
 package org.zgc.nio.producer.command;
 
 import com.google.protobuf.Timestamp;
-import org.zgc.nio.producer.thread.Processor;
+import org.zgc.nio.producer.thread.Sender;
 import org.zgc.nio.protocol.Record;
 
 public class MethodInvokeCommand extends AbstractCommand {
@@ -24,7 +24,7 @@ public class MethodInvokeCommand extends AbstractCommand {
     }
 
     @Override
-    public void execute(Processor client) {
+    public void execute(Sender client) {
         client.send(request);
     }
 }

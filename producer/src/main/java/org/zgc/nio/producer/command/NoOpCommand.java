@@ -1,11 +1,11 @@
 package org.zgc.nio.producer.command;
 
-import org.zgc.nio.producer.thread.Processor;
+import org.zgc.nio.producer.thread.Sender;
 
 public class NoOpCommand implements Command {
 
     @Override
-    public void execute(Processor client) {
+    public void execute(Sender client) {
 
     }
 }

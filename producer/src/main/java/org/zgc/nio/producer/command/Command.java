@@ -1,7 +1,7 @@
 package org.zgc.nio.producer.command;
 
-import org.zgc.nio.producer.thread.Processor;
+import org.zgc.nio.producer.thread.Sender;
 
 public interface Command {
-    void execute(Processor client);
+    void execute(Sender client);
 }

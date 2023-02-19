@@ -20,7 +20,7 @@ public class Bootstrap {
         new Acceptor(port).start();
         // 启动worker线程，用于处理请求、发送响应
         for (int i = 0; i < processorCount; i++) {
-            new Processor().start();
+            new Processor(,i).start();
         }
     }
 }

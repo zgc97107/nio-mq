@@ -1,5 +1,6 @@
 package org.zgc.nio.producer.internals;
 
+import lombok.Data;
 import lombok.extern.java.Log;
 import org.zgc.nio.protocol.Record;
 
@@ -25,16 +26,17 @@ public class RecordBatch {
         this.initialCapacity = byteBuffer.capacity();
         this.writable = true;
         this.records = 0;
+        this.lastWriteTime = System.currentTimeMillis();
     }
 
-    public void write(Record record) {
+    private void write(Record record) {
         int size = record.getSerializedSize();
         byteBuffer.putInt(size);
         byteBuffer.put(record.toByteArray());
         this.writeLimit = byteBuffer.position();
     }
 
-    public boolean hasRoomFor(Record record) {
+    private boolean hasRoomFor(Record record) {
         return writeLimit + record.getSerializedSize() > this.writeLimit;
     }
 
@@ -65,5 +67,17 @@ public class RecordBatch {
             return true;
         }
 
+    }
+
+    public long getLastWriteTime() {
+        return lastWriteTime;
+    }
+
+    public int getRecords() {
+        return records;
+    }
+
+    public ByteBuffer getRecordBuffer() {
+        return byteBuffer;
     }
 }

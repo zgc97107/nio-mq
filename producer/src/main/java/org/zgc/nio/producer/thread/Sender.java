@@ -2,6 +2,8 @@ package org.zgc.nio.producer.thread;
 
 import lombok.Data;
 import org.zgc.nio.parser.ResponseParser;
+import org.zgc.nio.producer.internals.RecordAccumulator;
+import org.zgc.nio.producer.internals.RecordBatch;
 import org.zgc.nio.protocol.Record;
 import org.zgc.nio.protocol.MethodInvokeResponse;
 
@@ -26,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @since 2022/8/24
  */
 @Data
-public class Processor extends Thread {
+public class Sender extends Thread {
 
     private Selector selector;
     private SocketChannel channel;
@@ -34,12 +36,13 @@ public class Processor extends Thread {
     private int port;
     boolean isStart = true;
     private SelectionKey key = null;
-    private BlockingQueue<Record> waitingSendRequests = new LinkedBlockingQueue<>();
     private Map<Integer, MethodInvokeResponse> cachedResponse = new HashMap<>();
+    private RecordAccumulator recordAccumulator;
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition condition = lock.newCondition();
 
-    public Processor(String host, int port) {
+    public Sender(String host, int port,RecordAccumulator recordAccumulator) {
+        this.recordAccumulator = recordAccumulator;
         this.host = host;
         this.port = port;
         try {
@@ -73,7 +76,7 @@ public class Processor extends Thread {
                 if (key.isConnectable()) {
                     finishConnection(key);
                 } else if (key.isWritable()) {
-                    sendRequest(key);
+                    send(key);
                 } else if (key.isReadable()) {
                     receiveResponse(key);
                 }
@@ -95,17 +98,14 @@ public class Processor extends Thread {
         }
     }
 
-    private void sendRequest(SelectionKey key) {
+    private void send(SelectionKey key) {
         try {
             SocketChannel channel = (SocketChannel) key.channel();
-            Record request;
-            while ((request = this.waitingSendRequests.poll()) != null) {
-                byte[] data = request.toByteArray();
-                ByteBuffer buffer = ByteBuffer.allocate(data.length + 4);
-                buffer.putInt(data.length);
-                buffer.put(data);
-                buffer.rewind();
-                channel.write(buffer);
+            RecordBatch message;
+            while ((message = recordAccumulator.ready()) != null) {
+                ByteBuffer recordBuffer = message.getRecordBuffer();
+                recordBuffer.rewind();
+                channel.write(recordBuffer);
             }
             key.interestOps(SelectionKey.OP_READ);
         } catch (IOException e) {

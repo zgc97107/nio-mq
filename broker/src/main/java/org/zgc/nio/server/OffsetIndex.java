@@ -1,7 +1,9 @@
 package org.zgc.nio.server;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.java.Log;
+import lombok.val;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +15,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Log
+@Data
 public class OffsetIndex {
     private File file;
     private MappedByteBuffer mmap;
@@ -56,19 +59,65 @@ public class OffsetIndex {
                 mmap.putInt(position);
                 entries++;
                 lastOffset = offset;
-                log.info("Appending to index, offset: " + offset + ", position: " + position + ", lastOffset: " + lastOffset+", entries: " + entries);
+                log.info("Appending to index, offset: " + offset + ", position: " + position + ", lastOffset: " + lastOffset + ", entries: " + entries);
             }
         }
     }
 
-    public boolean isFull(){
+    public OffsetPosition lookup(long targetOffset) {
+        synchronized (this) {
+            ByteBuffer idx = mmap.duplicate();
+            int slot = indexSlotFor(idx, targetOffset);
+            if (slot ==-1){
+                return new OffsetPosition(baseOffset, 0);
+            }else {
+                return new OffsetPosition(baseOffset + relativeOffset(idx, slot), physical(idx, slot));
+            }
+        }
+
+    }
+
+    public boolean isFull() {
         return this.entries >= maxEntries;
     }
 
-    public void flush(){
+    public void flush() {
         synchronized (this) {
             mmap.force();
         }
+    }
+
+    /**
+     * 二分查找
+     *
+     * @param idx
+     * @param targetOffset
+     * @return
+     */
+    private int indexSlotFor(ByteBuffer idx, long targetOffset) {
+        long relOffset = targetOffset - baseOffset;
+        if (entries == 0) {
+            return -1;
+        }
+
+        if (relativeOffset(idx, 0) > relOffset) {
+            return -1;
+        }
+
+        int lo = 0;
+        int hi = entries - 1;
+        while (lo < hi) {
+            int mid = (hi + lo) / 2;
+            int found = relativeOffset(idx, mid);
+            if (found == relOffset) {
+                return mid;
+            }else if (found < relOffset) {
+                lo = mid;
+            }else {
+                hi = mid - 1;
+            }
+        }
+        return lo;
     }
 
     private OffsetPosition readLastEntry() {
@@ -87,12 +136,6 @@ public class OffsetIndex {
 
     private int physical(ByteBuffer buffer, int n) {
         return buffer.getInt(n * 8 + 4);
-    }
-
-    @AllArgsConstructor
-    static class OffsetPosition {
-        long offset;
-        int position;
     }
 
     /**

@@ -2,20 +2,24 @@ package org.zgc.nio.server.thread;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.zgc.nio.parser.Parser;
+import org.zgc.nio.protocol.NetworkReceive;
+import org.zgc.nio.reader.ChannelReader;
+import org.zgc.nio.server.RequestChannel;
 import org.zgc.nio.server.Service;
 import org.zgc.nio.parser.RequestParser;
 import org.zgc.nio.protocol.Record;
 import org.zgc.nio.protocol.MethodInvokeResponse;
+import org.zgc.nio.transport.NetworkChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.function.Function;
 
 /**
  * @author lucheng
@@ -24,21 +28,26 @@ import java.util.concurrent.LinkedBlockingDeque;
 @Data
 @Slf4j
 public class Processor extends Thread {
+    private int processorId;
 
     private Selector selector;
 
-    private BlockingQueue<SocketChannel> waitingBindChannel;
+    private BlockingQueue<SocketChannel> newConnections;
+
+    private Map<String, NetworkChannel> connections = new ConcurrentHashMap<>();
+
 
     private Map<String, BlockingQueue<MethodInvokeResponse>> waitingSendResponse;
 
-    private Map<String, RequestParser> unFinishParsers;
+    private RequestChannel requestChannel;
 
-    public Processor() throws IOException {
-        selector = Selector.open();
-        waitingBindChannel = new LinkedBlockingDeque<>();
-        unFinishParsers = new HashMap<>();
-        waitingSendResponse = new HashMap<>();
+    public Processor(RequestChannel requestChannel, int processorId) throws IOException {
+        this.selector = Selector.open();
+        this.newConnections = new LinkedBlockingDeque<>();
+        this.waitingSendResponse = new HashMap<>();
         Processor.processors.add(this);
+        this.requestChannel = requestChannel;
+        this.processorId = processorId;
     }
 
     private static int index = 0;
@@ -48,19 +57,43 @@ public class Processor extends Thread {
         // 轮询绑定
         int index = (Processor.index++) % processors.size();
         Processor processor = processors.get(index);
-        processor.waitingBindChannel.offer(channel);
+        processor.newConnections.offer(channel);
     }
 
     @Override
     public void run() {
         log.info("processor thread start successful");
         while (true) {
-            bindingChannel();
-            handle();
+            try {
+                configureNewConnections();
+                processNewResponses();
+                poll();
+            } catch (Exception e) {
+                log.warn("processor execute error", e);
+            }
         }
     }
 
-    public void handle() {
+    private void processNewResponses() {
+        NetworkReceive response = requestChannel.receiveResponse(processorId);
+        while (response != null) {
+            try {
+                // TODO response status
+                sendResponse(response);
+            }finally {
+                response = requestChannel.receiveResponse(processorId);
+            }
+        }
+    }
+
+    private void sendResponse(NetworkReceive response) {
+        String connectionId = response.getSource();
+        NetworkChannel channel = connections.get(connectionId);
+        channel.setSend(response.getBuffer());
+    }
+
+
+    private void poll() {
         try {
             int count = selector.select(500);
             if (count <= 0)
@@ -71,42 +104,19 @@ public class Processor extends Thread {
                 SelectionKey key = iterator.next();
                 iterator.remove();
                 SocketChannel channel = (SocketChannel) key.channel();
-                String client = channel.getRemoteAddress().toString();
+                String connectionId = connectionId(channel);
+                // TODO 是否需要每次生成
+                NetworkChannel networkChannel = connections.computeIfAbsent(connectionId, k -> new NetworkChannel(processorId, connectionId, key, channel));
                 if (key.isReadable()) {
-                    log.info("receive request client: " + client);
+                    log.info("receive messages client: " + connectionId);
                     // 解决半包、沾包问题
-                    RequestParser parser = unFinishParsers.containsKey(client) ? unFinishParsers.remove(client) :
-                            new RequestParser();
-                    Record request = parser.parse(channel);
-                    if (!parser.isFinish()) {
-                        unFinishParsers.put(client, parser);
+                    NetworkReceive receive = networkChannel.read();
+                    if (receive != null) {
+                        requestChannel.sendRequest(receive);
                         return;
                     }
-                    log.info("parsed request : " + request);
-                    if (request != null) {
-                        // TODO 异步执行
-                        MethodInvokeResponse response = Service.handlerRequest(request);
-                        BlockingQueue<MethodInvokeResponse> waitingSendResponses = waitingSendResponse
-                                .computeIfAbsent(client, k -> new LinkedBlockingDeque<>());
-                        waitingSendResponses.offer(response);
-                        // 添加对write事件的关注
-                        key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
-                    }
                 } else if (key.isWritable()) {
-                    BlockingQueue<MethodInvokeResponse> waitingSendResponses = waitingSendResponse
-                            .computeIfAbsent(client, k -> new LinkedBlockingDeque<>());
-                    MethodInvokeResponse response;
-                    while ((response = waitingSendResponses.poll()) != null) {
-                        byte[] data = response.toByteArray();
-                        ByteBuffer buffer = ByteBuffer.allocate(data.length + 4);
-                        buffer.putInt(data.length);
-                        buffer.put(data);
-                        buffer.rewind();
-                        channel.write(buffer);
-                        log.info("send response: " + response);
-                    }
-                    // 移除write事件的关注
-                    key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+                    networkChannel.write();
                 }
             }
         } catch (Throwable e) {
@@ -114,14 +124,26 @@ public class Processor extends Thread {
         }
     }
 
-    private void bindingChannel() {
-        SocketChannel channel = null;
-        while ((channel = waitingBindChannel.poll()) != null) {
+    private void configureNewConnections() {
+        while (!newConnections.isEmpty()) {
+            SocketChannel channel = newConnections.poll();
             try {
-                channel.register(selector, SelectionKey.OP_READ);
-            } catch (ClosedChannelException e) {
-                e.printStackTrace();
+                String connectionId = connectionId(channel);
+                SelectionKey key = channel.register(selector, SelectionKey.OP_READ);
+                log.info("new connection: " + connectionId);
+                connections.put(connectionId, new NetworkChannel(processorId, connectionId, key, channel));
+            } catch (IOException e) {
+                throw new RuntimeException("configureNewConnections failed", e);
             }
         }
+    }
+
+
+    public String connectionId(SocketChannel channel) {
+        String localHost = channel.socket().getLocalAddress().getHostAddress();
+        int localPort = channel.socket().getLocalPort();
+        String remoteHost = channel.socket().getInetAddress().getHostAddress();
+        int remotePort = channel.socket().getPort();
+        return localHost + ":" + localPort + "-" + remoteHost + ":" + remotePort;
     }
 }
