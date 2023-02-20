@@ -27,11 +27,11 @@ public class RecordAccumulator {
         this.bufferPool = bufferPool;
     }
 
-    public boolean append(Record record) throws InterruptedException, TimeoutException {
+    public boolean append(String message) throws InterruptedException, TimeoutException {
         appendsInProgress.incrementAndGet();
         try {
             synchronized (this.batches) {
-                boolean result = tryAppend(record);
+                boolean result = tryAppend(message);
                 if (result) {
                     return true;
                 }
@@ -39,25 +39,25 @@ public class RecordAccumulator {
             ByteBuffer buffer = bufferPool.allocate(ProducerConfig.RECORD_BATCH_BUFFER_SIZE, ProducerConfig.BUFFER_ALLOCATE_MAX_WAIT_TIME);
             synchronized (this.batches) {
                 // 申请buffer期间，可能已有可用batch
-                if (tryAppend(record)) {
+                if (tryAppend(message)) {
                     bufferPool.deallocate(buffer);
                     return true;
                 }
                 RecordBatch batch = new RecordBatch(buffer);
                 batches.addLast(batch);
                 this.incompletes.add(batch);
-                return batch.tryAppend(record);
+                return batch.tryAppend(message);
             }
         } finally {
             appendsInProgress.decrementAndGet();
         }
     }
 
-    public boolean tryAppend(Record record) {
+    public boolean tryAppend(String message) {
         RecordBatch last = batches.peekLast();
         if (last != null) {
             // 空间不足则创建新的batch，并关闭当前batch
-            if (last.tryAppend(record)) {
+            if (last.tryAppend(message)) {
                 return true;
             } else {
                 last.close();
@@ -66,7 +66,7 @@ public class RecordAccumulator {
         return false;
     }
 
-    public RecordBatch ready() {
+    public synchronized RecordBatch ready() {
         long now = System.currentTimeMillis();
         RecordBatch recordBatch = batches.peekFirst();
         if (recordBatch == null || recordBatch.getRecords() <= 0) {
@@ -81,4 +81,7 @@ public class RecordAccumulator {
         return null;
     }
 
+    public void deallocate(RecordBatch recordBatch){
+        this.bufferPool.deallocate(recordBatch.getRecordBuffer());
+    }
 }

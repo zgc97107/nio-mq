@@ -24,11 +24,12 @@ public class OffsetIndex {
     private int entries;
     private int maxEntries;
 
-    public OffsetIndex(String filePath, int baseOffset) {
+    public OffsetIndex(String filePath, long baseOffset) {
         try {
             this.file = new File(filePath);
             boolean newlyCreated = !file.exists();
             if (newlyCreated) {
+                log.info("create new offset index file: " + filePath);
                 file.createNewFile();
             }
             RandomAccessFile raf = new RandomAccessFile(file, "rw");

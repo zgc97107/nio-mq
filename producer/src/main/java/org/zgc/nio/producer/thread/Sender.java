@@ -6,6 +6,7 @@ import org.zgc.nio.producer.internals.RecordAccumulator;
 import org.zgc.nio.producer.internals.RecordBatch;
 import org.zgc.nio.protocol.Record;
 import org.zgc.nio.protocol.MethodInvokeResponse;
+import org.zgc.nio.reader.ChannelReader;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -13,12 +14,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,12 +36,14 @@ public class Sender extends Thread {
     private int port;
     boolean isStart = true;
     private SelectionKey key = null;
+    private RecordBatch send = null;
+    private String receive = null;
     private Map<Integer, MethodInvokeResponse> cachedResponse = new HashMap<>();
     private RecordAccumulator recordAccumulator;
     private ReentrantLock lock = new ReentrantLock(true);
     private Condition condition = lock.newCondition();
 
-    public Sender(String host, int port,RecordAccumulator recordAccumulator) {
+    public Sender(String host, int port, RecordAccumulator recordAccumulator) {
         this.recordAccumulator = recordAccumulator;
         this.host = host;
         this.port = port;
@@ -50,37 +52,68 @@ public class Sender extends Thread {
             channel = SocketChannel.open();
             channel.configureBlocking(false);
             channel.connect(new InetSocketAddress(host, port));
-            channel.register(selector, SelectionKey.OP_CONNECT);
+            this.key = channel.register(selector, SelectionKey.OP_CONNECT);
         } catch (Exception e) {
-            System.out.println("processor create failed, exception: " + e);
+            System.out.println("Sender create failed, exception: " + e);
         }
     }
 
     @Override
     public void run() {
-        System.out.println("processor thread start successful: " + Thread.currentThread().getName());
+        System.out.println("Sender start successful: " + Thread.currentThread().getName());
         while (isStart) {
-            int count = 0;
+            processReadyBatch();
+            poll();
+            processNewResponse();
+        }
+    }
+
+    private void poll() {
+        int count = 0;
+        try {
+            count = selector.select(500);
+        } catch (IOException e) {
+            System.out.println("select failed, exception: " + e);
+        }
+        if (count <= 0) {
+            return;
+        }
+        Set<SelectionKey> keys = selector.selectedKeys();
+        Iterator<SelectionKey> iterator = keys.iterator();
+        while (iterator.hasNext()) {
+            key = iterator.next();
+            iterator.remove();
             try {
-                count = selector.select(500);
-            } catch (IOException e) {
-                System.out.println("select failed, exception: " + e);
-            }
-            if (count <= 0)
-                continue;
-            Set<SelectionKey> keys = selector.selectedKeys();
-            Iterator<SelectionKey> iterator = keys.iterator();
-            while (iterator.hasNext()) {
-                key = iterator.next();
-                iterator.remove();
                 if (key.isConnectable()) {
                     finishConnection(key);
                 } else if (key.isWritable()) {
                     send(key);
                 } else if (key.isReadable()) {
-                    receiveResponse(key);
+                    receive(key);
                 }
+            } catch (Exception e) {
+                System.out.println("send failed, exception: " + e);
             }
+        }
+    }
+
+    private void processReadyBatch() {
+        if (send != null) {
+            return;
+        }
+        RecordBatch readyBatch = recordAccumulator.ready();
+        if (readyBatch == null) {
+            return;
+        }
+        key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
+        this.send = readyBatch;
+    }
+
+    private void processNewResponse() {
+        if (this.receive != null) {
+            System.out.println(this.receive);
+            receive = null;
+            this.key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
         }
     }
 
@@ -92,79 +125,33 @@ public class Sender extends Thread {
                     TimeUnit.MILLISECONDS.sleep(100);
                 }
             }
+            key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
             System.out.println("connect server successful: " + channel.getRemoteAddress());
         } catch (InterruptedException | IOException e) {
             System.out.println("connect failed, exception" + e);
         }
     }
 
-    private void send(SelectionKey key) {
-        try {
-            SocketChannel channel = (SocketChannel) key.channel();
-            RecordBatch message;
-            while ((message = recordAccumulator.ready()) != null) {
-                ByteBuffer recordBuffer = message.getRecordBuffer();
-                recordBuffer.rewind();
-                channel.write(recordBuffer);
-            }
-            key.interestOps(SelectionKey.OP_READ);
-        } catch (IOException e) {
-            System.out.println("channel write failed, exception: " + e);
+    private void send(SelectionKey key) throws IOException {
+        SocketChannel channel = (SocketChannel) key.channel();
+        if (send != null) {
+            ByteBuffer recordBuffer = send.getRecordBuffer();
+            recordBuffer.rewind();
+            channel.write(recordBuffer);
+            recordAccumulator.deallocate(send);
         }
+        send = null;
+        key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
     }
 
-    private ResponseParser responseParser = null;
-
-    public void receiveResponse(SelectionKey key) {
-        try {
+    private void receive(SelectionKey key) throws IOException {
+        if (receive == null) {
             SocketChannel channel = (SocketChannel) key.channel();
-            if (this.responseParser == null) {
-                this.responseParser = new ResponseParser();
-            }
-            MethodInvokeResponse response = responseParser.parse(channel);
-            if (!responseParser.isFinish()) {
-                return;
-            }
-            responseParser = null;
-            cachedResponse.put(response.getRequestId(), response);
-            lock.lock();
-            try {
-                condition.signalAll();
-            } finally {
-                lock.unlock();
-            }
-        } catch (IOException e) {
-            System.out.println("channel read failed, exception: " + e);
+            ByteBuffer receiveBuffer = new ChannelReader(channel).read();
+            receive = new String(receiveBuffer.array(), StandardCharsets.UTF_8);
+            receiveBuffer.rewind();
         }
-    }
-
-    public void send(Record request) {
-        boolean offer = waitingSendRequests.offer(request);
-        if (!offer) {
-            System.out.println("send request failed");
-            return;
-        }
-        while (key == null) {
-            try {
-                TimeUnit.MILLISECONDS.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        System.out.println("poll request successful, waiting for response");
-        key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
-
-        while (!cachedResponse.containsKey(request.getRequestId())) {
-            lock.lock();
-            try {
-                condition.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                lock.unlock();
-            }
-        }
-        System.out.println("response info: " + cachedResponse.remove(request.getRequestId()));
+        key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
     }
 
     public void exit() {

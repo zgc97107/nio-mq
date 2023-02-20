@@ -16,11 +16,17 @@ public class Bootstrap {
     public static void main(String[] args) throws IOException {
         int port = 8848;
         int processorCount = 4;
+        LogManager logManager = new LogManager();
+        LogSegment logSegment = logManager.logSegment();
+        ReplicaManager replicaManager = new ReplicaManager(logSegment);
+        RequestChannel requestChannel = new RequestChannel(processorCount);
+        RequestHandler requestHandler = new RequestHandler(requestChannel, replicaManager);
+        new Thread(requestHandler).start();
         // 启动acceptor线程，用于监听channel建立请求
         new Acceptor(port).start();
         // 启动worker线程，用于处理请求、发送响应
         for (int i = 0; i < processorCount; i++) {
-            new Processor(,i).start();
+            new Processor(requestChannel, i).start();
         }
     }
 }

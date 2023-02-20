@@ -8,8 +8,8 @@ public class CommandFactory {
             return new NoOpCommand();
         command = command.trim();
         try {
-            if (command.startsWith("invoke")) {
-                return new MethodInvokeCommand(command);
+            if (command.startsWith("send")) {
+                return new SendMessageCommand(command);
             }
             if (command.length() > 0) {
                 System.out.println("无法识别命令：" + command);

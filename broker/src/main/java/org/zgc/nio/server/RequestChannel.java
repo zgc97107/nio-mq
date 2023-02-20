@@ -1,5 +1,7 @@
 package org.zgc.nio.server;
 
+import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.zgc.nio.protocol.NetworkReceive;
 import org.zgc.nio.protocol.Record;
 
@@ -7,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.*;
 
+@Slf4j
 public class RequestChannel {
     private BlockingQueue<NetworkReceive> requestQueue;
 
@@ -16,8 +19,9 @@ public class RequestChannel {
         this.requestQueue = new LinkedBlockingQueue<>();
         this.responseQueues = new LinkedBlockingQueue[processorNum];
         for (int i = 0; i < processorNum; i++) {
-            responseQueues[i] = new LinkedBlockingDeque<>();
+            responseQueues[i] = new LinkedBlockingQueue<>();
         }
+        log.info("RequestChannel initialized successfully");
     }
 
     public void sendRequest(NetworkReceive request) {

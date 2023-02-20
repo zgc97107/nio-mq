@@ -15,6 +15,9 @@ public class RequestHandler implements Runnable {
     public void run() {
         while (true) {
             NetworkReceive request = this.requestChannel.receiveRequest();
+            if (request == null) {
+                continue;
+            }
             replicaManager.appendMessages(request.getBuffer());
             this.requestChannel.sendResponse(NetworkReceive.response(request));
         }

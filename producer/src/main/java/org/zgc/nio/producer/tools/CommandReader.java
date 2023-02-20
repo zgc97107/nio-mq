@@ -25,9 +25,9 @@ public class CommandReader {
                 .system(true)
                 .build();
 
-        ArgumentCompleter completer = new ArgumentCompleter(new StringsCompleter("invoke"),
-                new StringsCompleter("org.zgc.nio.server.Service"),
-                new StringsCompleter("join"),
+        ArgumentCompleter completer = new ArgumentCompleter(new StringsCompleter("send"),
+                new StringsCompleter("hello world"),
+                new StringsCompleter("","50","100"),
                 NullCompleter.INSTANCE);
 
         lineReader = LineReaderBuilder.builder()

@@ -8,15 +8,14 @@ import java.nio.channels.FileChannel;
 
 public class LogSegment {
     private long bytesSinceLastIndexEntry;
-    private long indexIntervalBytes;
-    private OffsetIndex index;
-
-    private FileMessageSet log;
-    private long baseOffset;
+    private final long indexIntervalBytes;
+    private final OffsetIndex index;
+    private final FileMessageSet log;
+    private final long baseOffset;
     private long lastOffset;
 
-    public LogSegment(FileMessageSet fileMessageSet, OffsetIndex index, long baseOffset, long indexIntervalBytes) {
-        this.log = fileMessageSet;
+    public LogSegment(OffsetIndex index, FileMessageSet log, long baseOffset, long indexIntervalBytes) {
+        this.log = log;
         this.index = index;
         this.baseOffset = baseOffset;
         this.lastOffset = baseOffset;

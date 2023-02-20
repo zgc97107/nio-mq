@@ -3,6 +3,7 @@ package org.zgc.nio.server;
 import com.sun.scenario.effect.Offset;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.java.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Log
 public class FileMessageSet {
     private FileChannel channel;
     private File file;
@@ -22,6 +24,7 @@ public class FileMessageSet {
             this.file = new File(filePath);
             boolean newlyCreated = !file.exists();
             if (newlyCreated) {
+                log.info("create log file: " + filePath);
                 file.createNewFile();
             }
             RandomAccessFile raf = new RandomAccessFile(file, "rw");
@@ -51,6 +54,7 @@ public class FileMessageSet {
 
     /**
      * 找到目标
+     *
      * @param targetOffset
      * @param startingPosition
      * @return
@@ -78,8 +82,8 @@ public class FileMessageSet {
                 }
                 position += (logOverheadLength + messageSize);
             }
-        }catch (Exception e){
-            throw new RuntimeException("search for last offset failed",e);
+        } catch (Exception e) {
+            throw new RuntimeException("search for last offset failed", e);
         }
         return null;
     }

@@ -5,6 +5,7 @@ import lombok.extern.java.Log;
 import org.zgc.nio.protocol.Record;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 @Log
 public class RecordBatch {
@@ -29,15 +30,16 @@ public class RecordBatch {
         this.lastWriteTime = System.currentTimeMillis();
     }
 
-    private void write(Record record) {
-        int size = record.getSerializedSize();
+    private void write(String message) {
+        byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
+        int size = bytes.length;
         byteBuffer.putInt(size);
-        byteBuffer.put(record.toByteArray());
+        byteBuffer.put(bytes);
         this.writeLimit = byteBuffer.position();
     }
 
-    private boolean hasRoomFor(Record record) {
-        return writeLimit + record.getSerializedSize() > this.writeLimit;
+    private boolean hasRoomFor(String message) {
+        return writeLimit + message.getBytes(StandardCharsets.UTF_8).length > this.writeLimit;
     }
 
     public void close() {
@@ -52,16 +54,16 @@ public class RecordBatch {
         return initialCapacity - writeLimit;
     }
 
-    public boolean tryAppend(Record record) {
+    public boolean tryAppend(String message) {
         if (!writable){
             log.info("Appending record failed, batch is not writable");
             return false;
         }
-        if (!this.hasRoomFor(record)) {
+        if (!this.hasRoomFor(message)) {
             log.info("Appending record failed, batch is not have enough room");
             return false;
         } else {
-            this.write(record);
+            this.write(message);
             this.records++;
             this.lastWriteTime = System.currentTimeMillis();
             return true;
