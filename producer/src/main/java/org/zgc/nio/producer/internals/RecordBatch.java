@@ -2,12 +2,13 @@ package org.zgc.nio.producer.internals;
 
 import lombok.Data;
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.zgc.nio.protocol.Record;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-@Log
+@Slf4j
 public class RecordBatch {
     private final ByteBuffer byteBuffer;
 
@@ -39,7 +40,7 @@ public class RecordBatch {
     }
 
     private boolean hasRoomFor(String message) {
-        return writeLimit + message.getBytes(StandardCharsets.UTF_8).length > this.writeLimit;
+        return writeLimit + message.getBytes(StandardCharsets.UTF_8).length < this.initialCapacity;
     }
 
     public void close() {

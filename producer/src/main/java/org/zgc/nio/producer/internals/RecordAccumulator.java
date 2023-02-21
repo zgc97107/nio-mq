@@ -1,6 +1,7 @@
 package org.zgc.nio.producer.internals;
 
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.zgc.nio.producer.ProducerConfig;
 import org.zgc.nio.protocol.Record;
 
@@ -25,6 +26,7 @@ public class RecordAccumulator {
         this.appendsInProgress = new AtomicInteger(0);
         this.flushesInProgress = new AtomicInteger(0);
         this.bufferPool = bufferPool;
+        log.info("RecordAccumulator initialized");
     }
 
     public boolean append(String message) throws InterruptedException, TimeoutException {
@@ -73,9 +75,11 @@ public class RecordAccumulator {
             return null;
         }
         if (now - recordBatch.getLastWriteTime() > ProducerConfig.RECORD_BATCH_SEND_MAX_WAIT_TIME) {
+            batches.remove(recordBatch);
             return recordBatch;
         }
         if (recordBatch.freeSize() < ProducerConfig.RECORD_BATCH_SEND_FREE_SIZE) {
+            batches.remove(recordBatch);
             return recordBatch;
         }
         return null;

@@ -1,13 +1,14 @@
 package org.zgc.nio.server;
 
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import org.zgc.nio.protocol.Record;
 
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Log
+@Slf4j
 public class ReplicaManager {
     private LogSegment logSegment;
 

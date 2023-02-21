@@ -28,12 +28,12 @@ public class Acceptor extends Thread {
         channel.socket().bind(new InetSocketAddress(port));
         selector = Selector.open();
         this.channel.register(selector, SelectionKey.OP_ACCEPT);
-        log.info("server start successful, binding port:" + port);
+        log.info("Acceptor initialized successfully, binding port:" + port);
     }
 
     @Override
     public void run() {
-        log.info("acceptor thread start successful");
+        log.info("Acceptor thread start successfully");
         try {
             while (true) {
                 int count = selector.select(500);

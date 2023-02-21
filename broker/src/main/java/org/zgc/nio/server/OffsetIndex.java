@@ -3,6 +3,7 @@ package org.zgc.nio.server;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import java.io.File;
@@ -14,7 +15,7 @@ import java.nio.channels.FileChannel;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-@Log
+@Slf4j
 @Data
 public class OffsetIndex {
     private File file;

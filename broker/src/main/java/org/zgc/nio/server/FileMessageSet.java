@@ -4,6 +4,7 @@ import com.sun.scenario.effect.Offset;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,7 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Log
+@Slf4j
 public class FileMessageSet {
     private FileChannel channel;
     private File file;
@@ -38,6 +39,7 @@ public class FileMessageSet {
     public void append(ByteBuffer message) {
         int written = 0;
         try {
+            message.mark();
             int size = message.limit();
             while (written < size) {
                 written += channel.write(message);

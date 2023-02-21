@@ -1,6 +1,7 @@
 package org.zgc.nio.producer.internals;
 
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -31,6 +32,7 @@ public class BufferPool {
         this.availableMemory = memory;
         this.free = new ArrayDeque<>(poolSize);
         this.waiters = new ArrayDeque<>(poolSize);
+        log.info("BufferPool initialized, poolSize=" + poolSize + ", availableMemory=" + availableMemory);
     }
 
     /**
@@ -160,7 +162,7 @@ public class BufferPool {
                 log.info("deallocate default pool size: " + this.poolSize);
             } else {
                 this.availableMemory += size;
-                log.info("deallocate customer pool size: " + this.poolSize);
+                log.info("deallocate customer pool size: " + this.poolSize + " available: " + availableMemory);
             }
             Condition moreAvailable = this.waiters.peekFirst();
             if (moreAvailable != null) {

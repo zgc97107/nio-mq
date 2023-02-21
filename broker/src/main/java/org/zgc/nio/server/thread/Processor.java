@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author lucheng
@@ -55,7 +56,7 @@ public class Processor extends Thread {
 
     @Override
     public void run() {
-        log.info("processor thread start successful");
+        log.info("Processor thread started successful, processorId: " + processorId);
         while (true) {
             try {
                 configureNewConnections();
@@ -73,7 +74,7 @@ public class Processor extends Thread {
             try {
                 // TODO response status
                 sendResponse(response);
-            }finally {
+            } finally {
                 response = requestChannel.receiveResponse(processorId);
             }
         }

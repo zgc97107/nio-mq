@@ -19,8 +19,11 @@ public class Bootstrap {
     public static void main(String[] args) throws InterruptedException, IOException {
         BufferPool bufferPool = new BufferPool(ProducerConfig.BUFFER_POOL_MAX_MEMORY, ProducerConfig.BUFFER_POOL_MAX_SIZE);
         RecordAccumulator recordAccumulator = new RecordAccumulator(bufferPool);
-        Sender processor = new Sender(ProducerConfig.HOST, ProducerConfig.PORT, recordAccumulator);
-        processor.start();
+        Sender sender = new Sender(ProducerConfig.HOST, ProducerConfig.PORT, recordAccumulator);
+        sender.start();
+        synchronized (sender){
+            sender.wait();
+        }
         CommandReader commandReader = new CommandReader();
         CommandExecutor commandExecutor = new CommandExecutor(recordAccumulator);
         try {
@@ -30,7 +33,7 @@ public class Bootstrap {
             }
         } catch (UserInterruptException e){
             isStart = false;
-            processor.exit();
+            sender.exit();
             System.exit(0);
         }
 

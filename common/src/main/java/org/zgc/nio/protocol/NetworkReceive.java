@@ -16,9 +16,8 @@ public class NetworkReceive {
     public static NetworkReceive response(NetworkReceive request){
         String response = "received successfully";
         byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
-        int length = responseBytes.length + 4;
-        ByteBuffer buffer = ByteBuffer.allocate(length);
-        buffer.putInt(length);
+        ByteBuffer buffer = ByteBuffer.allocate(responseBytes.length + 4);
+        buffer.putInt(responseBytes.length);
         buffer.put(responseBytes);
         buffer.rewind();
         return new NetworkReceive(request.processor, request.source, buffer);

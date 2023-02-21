@@ -54,6 +54,7 @@ public class NetworkChannel {
             channel.read(receiveSize);
             if (receiveSize.position() == 0) {
                 channel.close();
+                receiveSize = null;
                 throw new Exception("channel closed" + channel.getRemoteAddress());
             }
             // 出现半包情况，等待下次read事件将buffer写满
@@ -76,10 +77,11 @@ public class NetworkChannel {
             receive.rewind();
         } catch (Exception e) {
             log.error("parse error exception: " + e);
-            receive = null;
+            clear();
         }
+        NetworkReceive networkReceive = new NetworkReceive(processor, connectionId, receive);
         clear();
-        return new NetworkReceive(processor, connectionId, receive);
+        return networkReceive;
     }
 
     private synchronized void clear() {
@@ -95,6 +97,7 @@ public class NetworkChannel {
         while (send.hasRemaining()){
             channel.write(send);
         }
+        this.send = null;
         key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
         unmute();
     }

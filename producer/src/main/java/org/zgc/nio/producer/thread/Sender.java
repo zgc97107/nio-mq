@@ -1,6 +1,7 @@
 package org.zgc.nio.producer.thread;
 
 import lombok.Data;
+import lombok.extern.java.Log;
 import org.zgc.nio.parser.ResponseParser;
 import org.zgc.nio.producer.internals.RecordAccumulator;
 import org.zgc.nio.producer.internals.RecordBatch;
@@ -28,6 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @since 2022/8/24
  */
 @Data
+@Log
 public class Sender extends Thread {
 
     private Selector selector;
@@ -53,14 +55,15 @@ public class Sender extends Thread {
             channel.configureBlocking(false);
             channel.connect(new InetSocketAddress(host, port));
             this.key = channel.register(selector, SelectionKey.OP_CONNECT);
+            log.info("Sender initialized successfully");
         } catch (Exception e) {
-            System.out.println("Sender create failed, exception: " + e);
+            log.warning("Sender initialized failed, exception: " + e);
         }
     }
 
     @Override
     public void run() {
-        System.out.println("Sender start successful: " + Thread.currentThread().getName());
+        log.info("Sender started successfully");
         while (isStart) {
             processReadyBatch();
             poll();
@@ -126,9 +129,13 @@ public class Sender extends Thread {
                 }
             }
             key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
-            System.out.println("connect server successful: " + channel.getRemoteAddress());
+            log.info("connect to server successful, serverAddress: " + channel.getRemoteAddress());
         } catch (InterruptedException | IOException e) {
-            System.out.println("connect failed, exception" + e);
+            log.warning("connect to server failed, exception" + e);
+        } finally {
+            synchronized (this) {
+                this.notifyAll();
+            }
         }
     }
 
@@ -136,21 +143,26 @@ public class Sender extends Thread {
         SocketChannel channel = (SocketChannel) key.channel();
         if (send != null) {
             ByteBuffer recordBuffer = send.getRecordBuffer();
-            recordBuffer.rewind();
+            recordBuffer.flip();
             channel.write(recordBuffer);
             recordAccumulator.deallocate(send);
         }
         send = null;
         key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+        key.interestOps(key.interestOps() | SelectionKey.OP_READ);
     }
 
     private void receive(SelectionKey key) throws IOException {
-        if (receive == null) {
-            SocketChannel channel = (SocketChannel) key.channel();
-            ByteBuffer receiveBuffer = new ChannelReader(channel).read();
-            receive = new String(receiveBuffer.array(), StandardCharsets.UTF_8);
-            receiveBuffer.rewind();
+        if (receive != null) {
+            return;
         }
+        SocketChannel channel = (SocketChannel) key.channel();
+        ByteBuffer receiveBuffer = new ChannelReader(channel).read();
+        if (receiveBuffer == null) {
+            return;
+        }
+        receive = new String(receiveBuffer.array(), StandardCharsets.UTF_8);
+        receiveBuffer.rewind();
         key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
     }
 
