@@ -123,6 +123,7 @@ public class Processor extends Thread {
             SocketChannel channel = newConnections.poll();
             try {
                 String connectionId = connectionId(channel);
+                channel.configureBlocking(false);
                 SelectionKey key = channel.register(selector, SelectionKey.OP_READ);
                 log.info("new connection: " + connectionId);
                 connections.put(connectionId, new NetworkChannel(processorId, connectionId, key, channel));

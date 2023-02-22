@@ -51,7 +51,7 @@ public class BufferPool {
         this.lock.lock();
         try {
 
-            // 申请大小与默认大小相同，并且有空闲连接，直接取空闲buffer
+            // 申请大小与默认大小相同，并且有空闲buffer，直接返回
             if (size == poolSize && !this.free.isEmpty()) {
                 return this.free.pollFirst();
             }

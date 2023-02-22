@@ -77,17 +77,16 @@ public class NetworkChannel {
             receive.rewind();
         } catch (Exception e) {
             log.error("parse error exception: " + e);
-            clear();
         }
         NetworkReceive networkReceive = new NetworkReceive(processor, connectionId, receive);
         clear();
+        mute();
         return networkReceive;
     }
 
     private synchronized void clear() {
         receiveSize = null;
         receive = null;
-        mute();
     }
 
     public void write() throws IOException {

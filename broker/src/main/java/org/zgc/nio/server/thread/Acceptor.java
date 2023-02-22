@@ -47,7 +47,6 @@ public class Acceptor extends Thread {
                     if (key.isAcceptable()) {
                         ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
                         SocketChannel channel = serverSocketChannel.accept();
-                        channel.configureBlocking(false);
                        // 将链接事件绑定到某个Processor
                         Processor.addChannel(channel);
                         log.info("connection accepted: " + channel.getRemoteAddress());
