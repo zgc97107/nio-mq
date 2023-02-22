@@ -25,7 +25,7 @@
 - compact()：将 position 与 limit之间的数据复制到buffer的开始位置，复制后 position = limit -position，limit = capacity，删除已读取数据时调用。
 - mark() & reset()：通过调用Buffer.mark()方法，可以标记Buffer中的一个特定position。之后可以通过调用Buffer.reset()方法恢复到这个position。
 
-![img](https://upload-images.jianshu.io/upload_images/1115848-13f9d29c65eda2cd.png?imageMogr2/auto-orient/strip|imageView2/2/w/910)
+![img](C:\tools\workspace\nio-mq\readme\910.png)
 
 ### Selector
 
