@@ -34,21 +34,14 @@ public class Sender extends Thread {
 
     private Selector selector;
     private SocketChannel channel;
-    private String host;
-    private int port;
     boolean isStart = true;
     private SelectionKey key = null;
     private RecordBatch send = null;
     private String receive = null;
-    private Map<Integer, MethodInvokeResponse> cachedResponse = new HashMap<>();
     private RecordAccumulator recordAccumulator;
-    private ReentrantLock lock = new ReentrantLock(true);
-    private Condition condition = lock.newCondition();
 
     public Sender(String host, int port, RecordAccumulator recordAccumulator) {
         this.recordAccumulator = recordAccumulator;
-        this.host = host;
-        this.port = port;
         try {
             selector = Selector.open();
             channel = SocketChannel.open();

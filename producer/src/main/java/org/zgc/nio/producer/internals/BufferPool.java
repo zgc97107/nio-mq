@@ -63,7 +63,7 @@ public class BufferPool {
                 freeUp(size);
                 this.availableMemory -= size;
                 lock.unlock();
-                return ByteBuffer.allocate(size);
+                return ByteBuffer.allocateDirect(size);
             } else {
                 // 空间不足，进入等待
                 Condition moreAccumulated = this.lock.newCondition();

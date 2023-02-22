@@ -1,4 +1,4 @@
-## NIO网络通信
+## NIO-TEST
 
 **Java nio中，主要有三大组件：Buffer，Channel和Selector。**
 
@@ -62,4 +62,57 @@ Java NIO的通道类似流，但又有些不同。
 - SelectionKey.OP_WRITE
 
 Selector关注的事件类型通过八个byte位标记，如果需要关注多个事件，或从多个事件中取消关注某个事件，可以使用与操作及或操作进行。
+
+## NIO-MQ
+
+### RecordAccumulator
+
+对RecordBatch进行管理，创建、销毁、写入。
+
+#### 属性
+
+```
+BufferPool bufferPool;
+ConcurrentLinkedDeque<RecordBatch> batches;
+```
+
+#### 方法
+
+```
+append()
+ready()
+deallocate()
+```
+
+### BufferPool
+
+#### 属性
+
+```
+long totalMemory;
+int poolSize;
+ReentrantLock lock;
+Deque<ByteBuffer> free;
+Deque<Condition> waiters;
+long availableMemory;
+```
+
+#### 方法
+
+```
+allocate()
+freeUp()
+deallocate()
+```
+
+### RecordBatch
+
+```
+ByteBuffer byteBuffer
+int writeLimit
+int initialCapacity
+boolean writable
+int records
+long lastWriteTime
+```
 
