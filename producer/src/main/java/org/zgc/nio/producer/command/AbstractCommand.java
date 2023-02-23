@@ -11,4 +11,14 @@ public abstract class AbstractCommand implements Command{
         this.args = command.split(" ");
     }
 
+    public void waiting(){
+        synchronized (this){
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
 }

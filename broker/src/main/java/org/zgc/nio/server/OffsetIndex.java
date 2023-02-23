@@ -1,10 +1,7 @@
 package org.zgc.nio.server;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,8 +9,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Data
@@ -40,12 +35,13 @@ public class OffsetIndex {
             }
             long len = raf.length();
             this.mmap = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, len);
-            if (newlyCreated) {
+/*            if (newlyCreated) {
                 mmap.position(0);
             } else {
                 mmap.position(roundToExactMultiple(mmap.limit(), 8));
-            }
-            this.entries = mmap.position() / 8;
+            }*/
+            mmap.position(0);
+            this.entries = 0;
             this.maxEntries = mmap.limit() / 8;
             this.baseOffset = baseOffset;
             this.lastOffset = baseOffset + entries;

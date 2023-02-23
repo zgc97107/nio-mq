@@ -1,22 +1,21 @@
 package org.zgc.nio.server;
 
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 
+@Slf4j
 public class LogSegment {
     private long bytesSinceLastIndexEntry;
     private final long indexIntervalBytes;
-    private final OffsetIndex index;
-    private final FileMessageSet log;
+    private final OffsetIndex indexFile;
+    private final FileMessageSet logFile;
     private final long baseOffset;
     private long lastOffset;
 
-    public LogSegment(OffsetIndex index, FileMessageSet log, long baseOffset, long indexIntervalBytes) {
-        this.log = log;
-        this.index = index;
+    public LogSegment(OffsetIndex indexFile, FileMessageSet log, long baseOffset, long indexIntervalBytes) {
+        this.logFile = log;
+        this.indexFile = indexFile;
         this.baseOffset = baseOffset;
         this.lastOffset = baseOffset;
         this.indexIntervalBytes = indexIntervalBytes;
@@ -25,12 +24,16 @@ public class LogSegment {
 
     public void append(ByteBuffer message) {
         // 是否需写稀疏索引
+        long offset = nextOffset();
+        logFile.append(message);
+        this.bytesSinceLastIndexEntry += message.limit();
+        log.info("Append message, position: " + logFile.sizeInBytes()+", offset: " + offset +", sinceLastIndexEntry: " + bytesSinceLastIndexEntry);
+
         if (bytesSinceLastIndexEntry > indexIntervalBytes) {
-            index.append(nextOffset(), log.sizeInBytes());
+            log.info("Write offset index, position: " + logFile.sizeInBytes());
+            indexFile.append(offset, logFile.sizeInBytes());
             this.bytesSinceLastIndexEntry = 0;
         }
-        log.append(message);
-        this.bytesSinceLastIndexEntry += message.limit();
     }
 
     public long nextOffset() {
@@ -38,7 +41,7 @@ public class LogSegment {
     }
 
     public OffsetPosition translateOffset(long offset, int startingFilePosition) {
-        OffsetPosition mapping = index.lookup(offset);
-        return log.searchFor(offset, Math.max(mapping.getPosition(), startingFilePosition));
+        OffsetPosition mapping = indexFile.lookup(offset);
+        return logFile.searchFor(offset, Math.max(mapping.getPosition(), startingFilePosition));
     }
 }

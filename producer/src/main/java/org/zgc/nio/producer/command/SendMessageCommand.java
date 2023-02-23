@@ -1,10 +1,5 @@
 package org.zgc.nio.producer.command;
 
-import com.google.protobuf.Timestamp;
-import org.zgc.nio.producer.internals.RecordAccumulator;
-import org.zgc.nio.producer.thread.Sender;
-import org.zgc.nio.protocol.Record;
-
 import java.util.*;
 
 public class SendMessageCommand extends AbstractCommand {
@@ -29,12 +24,14 @@ public class SendMessageCommand extends AbstractCommand {
                 System.out.println("execute failed exception: " + e);
             }
         });
+        executor.addToWaitingList(this);
+        waiting();
     }
 
     private void parse() {
         String arg = args.pollFirst();
         arg = args.pollFirst();
-        if (args.contains("-n")) {
+        if (arg.contains("-n")) {
             int count = Integer.parseInt(args.pollFirst());
             String message = String.join(" ", args);
             for (int i = 0; i < count; i++) {

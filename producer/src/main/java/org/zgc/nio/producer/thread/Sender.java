@@ -2,11 +2,9 @@ package org.zgc.nio.producer.thread;
 
 import lombok.Data;
 import lombok.extern.java.Log;
-import org.zgc.nio.parser.ResponseParser;
+import org.zgc.nio.producer.command.CommandExecutor;
 import org.zgc.nio.producer.internals.RecordAccumulator;
 import org.zgc.nio.producer.internals.RecordBatch;
-import org.zgc.nio.protocol.Record;
-import org.zgc.nio.protocol.MethodInvokeResponse;
 import org.zgc.nio.reader.ChannelReader;
 
 import java.io.IOException;
@@ -16,13 +14,9 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author lucheng
@@ -39,8 +33,9 @@ public class Sender extends Thread {
     private RecordBatch send = null;
     private String receive = null;
     private RecordAccumulator recordAccumulator;
+    private CommandExecutor commandExecutor;
 
-    public Sender(String host, int port, RecordAccumulator recordAccumulator) {
+    public Sender(String host, int port, RecordAccumulator recordAccumulator, CommandExecutor commandExecutor) {
         this.recordAccumulator = recordAccumulator;
         try {
             selector = Selector.open();
@@ -48,6 +43,7 @@ public class Sender extends Thread {
             channel.configureBlocking(false);
             channel.connect(new InetSocketAddress(host, port));
             this.key = channel.register(selector, SelectionKey.OP_CONNECT);
+            this.commandExecutor = commandExecutor;
             log.info("Sender initialized successfully");
         } catch (Exception e) {
             log.warning("Sender initialized failed, exception: " + e);
@@ -69,7 +65,7 @@ public class Sender extends Thread {
         try {
             count = selector.select(500);
         } catch (IOException e) {
-            System.out.println("select failed, exception: " + e);
+            log.info("select failed, exception: " + e);
         }
         if (count <= 0) {
             return;
@@ -88,7 +84,7 @@ public class Sender extends Thread {
                     receive(key);
                 }
             } catch (Exception e) {
-                System.out.println("send failed, exception: " + e);
+                log.info("send failed, exception: " + e);
             }
         }
     }
@@ -107,9 +103,10 @@ public class Sender extends Thread {
 
     private void processNewResponse() {
         if (this.receive != null) {
-            System.out.println(this.receive);
+            log.info(this.receive);
             receive = null;
             this.key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
+            this.commandExecutor.notifyWaitingList();
         }
     }
 
@@ -137,7 +134,12 @@ public class Sender extends Thread {
         if (send != null) {
             ByteBuffer recordBuffer = send.getRecordBuffer();
             recordBuffer.flip();
-            channel.write(recordBuffer);
+            int dataSize = recordBuffer.limit();
+            ByteBuffer dataBuffer = ByteBuffer.allocate(4+ dataSize);
+            dataBuffer.putInt(dataSize);
+            dataBuffer.put(recordBuffer);
+            dataBuffer.flip();
+            channel.write(dataBuffer);
             recordAccumulator.deallocate(send);
         }
         send = null;

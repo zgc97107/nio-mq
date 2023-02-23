@@ -1,7 +1,6 @@
 package org.zgc.nio.producer.internals;
 
 import lombok.extern.java.Log;
-import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -50,15 +49,15 @@ public class BufferPool {
         }
         this.lock.lock();
         try {
-
             // 申请大小与默认大小相同，并且有空闲buffer，直接返回
             if (size == poolSize && !this.free.isEmpty()) {
+                log.info("Allocating successfully by frees, size: " + size);
                 return this.free.pollFirst();
             }
             int freeListSize = this.free.size() * this.poolSize;
             // 需要申请新buffer，检查可用空间大小
             if (this.availableMemory + freeListSize >= this.totalMemory) {
-                log.info("Allocating successfully by availableMemory");
+                log.info("Allocating successfully by availableMemory, size: " + size);
                 // 空间充足，直接申请
                 freeUp(size);
                 this.availableMemory -= size;
@@ -94,7 +93,7 @@ public class BufferPool {
                     if (accumulated == 0 && size == this.poolSize && !this.free.isEmpty()) {
                         byteBuffer = this.free.pollLast();
                         accumulated = size;
-                        log.info("Allocating successfully by waiting for free");
+                        log.info("Allocating successfully by waiting for free, size: " + size);
                     } else {
                         freeUp(size - accumulated);
                         int got = (int) Math.min(size - accumulated, this.availableMemory);
@@ -155,19 +154,18 @@ public class BufferPool {
     public void deallocate(ByteBuffer byteBuffer, int size) {
         lock.lock();
         try {
-
             if (size == this.poolSize && size == byteBuffer.capacity()) {
                 byteBuffer.clear();
                 this.free.add(byteBuffer);
-                log.info("deallocate default pool size: " + this.poolSize);
+                log.info("Deallocated default pool size: " + this.poolSize);
             } else {
                 this.availableMemory += size;
-                log.info("deallocate customer pool size: " + this.poolSize + " available: " + availableMemory);
+                log.info("Deallocated customer pool size: " + this.poolSize + " available: " + availableMemory);
             }
             Condition moreAvailable = this.waiters.peekFirst();
             if (moreAvailable != null) {
                 moreAvailable.signal();
-                log.info("signal accumulated memory thread");
+                log.info("Signal accumulated memory thread");
             }
         } finally {
             lock.unlock();

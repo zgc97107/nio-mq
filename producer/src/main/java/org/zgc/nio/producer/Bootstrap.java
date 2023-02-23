@@ -16,22 +16,23 @@ import java.io.IOException;
  */
 public class Bootstrap {
     public static boolean isStart = true;
+
     public static void main(String[] args) throws InterruptedException, IOException {
         BufferPool bufferPool = new BufferPool(ProducerConfig.BUFFER_POOL_MAX_MEMORY, ProducerConfig.BUFFER_POOL_MAX_SIZE);
         RecordAccumulator recordAccumulator = new RecordAccumulator(bufferPool);
-        Sender sender = new Sender(ProducerConfig.HOST, ProducerConfig.PORT, recordAccumulator);
+        CommandExecutor commandExecutor = new CommandExecutor(recordAccumulator);
+        Sender sender = new Sender(ProducerConfig.HOST, ProducerConfig.PORT, recordAccumulator, commandExecutor);
         sender.start();
-        synchronized (sender){
+        synchronized (sender) {
             sender.wait();
         }
         CommandReader commandReader = new CommandReader();
-        CommandExecutor commandExecutor = new CommandExecutor(recordAccumulator);
         try {
             while (isStart) {
                 Command command = commandReader.readCommand();
                 command.execute(commandExecutor);
             }
-        } catch (UserInterruptException e){
+        } catch (UserInterruptException e) {
             isStart = false;
             sender.exit();
             System.exit(0);
